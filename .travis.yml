@@ -1,0 +1,28 @@
+language: c
+
+env:
+  matrix:
+    - "LUA=lua5.1 EVLOOP=epoll"
+    - "LUA=lua5.1 EVLOOP=select"
+
+install:
+  - "sudo apt-get install -yq $LUA $lib$LUA-0-dev python-pexpect luarocks"
+  - "sudo -H pip -q install PyYAML cpp-coveralls"
+  - "sudo luarocks install Lua-cURL"
+  - "sudo luarocks install luacov-coveralls"
+  - "sudo luarocks install lunitx"
+  - "./tests/netsnmp_build.sh"
+
+script:
+  - "scons --with-agentx --evloop=$EVLOOP --gcov=yes"
+  - "sudo LUACOV=1 SYS_LUA_PATH=`$LUA -e 'print(package.path)'` LUA=$LUA python ./tests/test_all.py"
+  - "sudo chmod 666 luacov.stats.out"
+  - "$LUA -lluacov tests/test_utils.lua"
+
+after_success:
+  - "cpp-coveralls -b . -e .sconf_temp `ls core/*.gcno | sed 's/\\.gcno$/.c/' | sed 's/^/-i /'` --dump c.report.json"
+  - "luacov-coveralls -j c.report.json -i bin/smithsnmpd -i lualib/smithsnmp/init.lua -i lualib/smithsnmp/utils.lua"
+
+after_failure:
+  - "cat config.log"
+  - "cat tests/test.log"
