@@ -48,31 +48,31 @@ local tcp_snmp_conn_stat_map = {
 }
 
 local hextab = {
-  ['0'] = 0,
-  ['1'] = 1,
-  ['2'] = 2,
-  ['3'] = 3,
-  ['4'] = 4,
-  ['5'] = 5,
-  ['6'] = 6,
-  ['7'] = 7,
-  ['8'] = 8,
-  ['9'] = 9,
-  ['A'] = 10,
-  ['a'] = 10,
-  ['B'] = 11,
-  ['b'] = 11,
-  ['C'] = 12,
-  ['c'] = 12,
-  ['D'] = 13,
-  ['d'] = 13,
-  ['E'] = 14,
-  ['e'] = 14,
-  ['F'] = 15,
-  ['f'] = 15,
+    ['0'] = 0,
+    ['1'] = 1,
+    ['2'] = 2,
+    ['3'] = 3,
+    ['4'] = 4,
+    ['5'] = 5,
+    ['6'] = 6,
+    ['7'] = 7,
+    ['8'] = 8,
+    ['9'] = 9,
+    ['A'] = 10,
+    ['a'] = 10,
+    ['B'] = 11,
+    ['b'] = 11,
+    ['C'] = 12,
+    ['c'] = 12,
+    ['D'] = 13,
+    ['d'] = 13,
+    ['E'] = 14,
+    ['e'] = 14,
+    ['F'] = 15,
+    ['f'] = 15,
 }
 
-local function ip_hex2num(hex)
+local ip_hex2num = function(hex)
     assert(type(hex) == 'string')
     local num = {} 
     for i = #hex, 1, -2 do
@@ -83,7 +83,7 @@ local function ip_hex2num(hex)
     return table.concat(num, ".")
 end
 
-local function hex2num(hex)
+local hex2num = function(hex)
     assert(type(hex) == 'string')
     local num = 0
     for i = 1, #hex do
@@ -92,7 +92,7 @@ local function hex2num(hex)
     return num
 end
 
-local function __load_config()
+local __load_config = function()
     tcp_scalar_cache = {}
     tcp_conn_entry_cache = {}
     for line in io.lines("/proc/net/snmp") do
@@ -123,17 +123,9 @@ end
 
 local last_load_time = os.time()
 
-local function need_to_reload()
-    if os.difftime(os.time(), last_load_time) < 3 then
-        return false
-    else
+local load_config = function()
+    if os.difftime(os.time(), last_load_time) > 3 then
         last_load_time = os.time()
-        return true
-    end
-end
-
-local function load_config()
-    if need_to_reload() == true then
         __load_config()
     end
 end
@@ -142,7 +134,7 @@ __load_config()
 
 mib.module_methods.or_table_reg("1.3.6.1.2.1.6", "The MIB module for managing TCP inplementations")
 
-local function tcp_conn_entry_get(sub_oid, name)
+local tcp_conn_entry_get = function(sub_oid, name)
     assert(type(name) == 'string')
     local value
     if type(sub_oid) == 'table' then
@@ -154,7 +146,7 @@ local function tcp_conn_entry_get(sub_oid, name)
     return value
 end
 
-local function tcp_conn_entry_set(sub_oid, value, name)
+local tcp_conn_entry_set = function(sub_oid, value, name)
     assert(type(name) == 'string')
     if type(sub_oid) == 'table' then
         local key = table.concat(sub_oid, ".")
@@ -165,25 +157,25 @@ local function tcp_conn_entry_set(sub_oid, value, name)
 end
 
 local tcpGroup = {
-    [1] = mib.ConstInt(function () load_config() return tcp_scalar_cache[1] end),
-    [2] = mib.ConstInt(function () load_config() return tcp_scalar_cache[2] end),
-    [3] = mib.ConstInt(function () load_config() return tcp_scalar_cache[3] end),
-    [4] = mib.ConstInt(function () load_config() return tcp_scalar_cache[4] end),
-    [5] = mib.ConstCount(function () load_config() return tcp_scalar_cache[5] end),
-    [6] = mib.ConstCount(function () load_config() return tcp_scalar_cache[6] end),
-    [7] = mib.ConstCount(function () load_config() return tcp_scalar_cache[7] end),
-    [8] = mib.ConstCount(function () load_config() return tcp_scalar_cache[8] end),
-    [9] = mib.ConstGauge(function () load_config() return tcp_scalar_cache[9] end),
-    [10] = mib.ConstCount(function () load_config() return tcp_scalar_cache[10] end),
-    [11] = mib.ConstCount(function () load_config() return tcp_scalar_cache[11] end),
-    [12] = mib.ConstCount(function () load_config() return tcp_scalar_cache[12] end),
+    io = load_config,
+    [1] = mib.ConstInt(function () return tcp_scalar_cache[1] end),
+    [2] = mib.ConstInt(function () return tcp_scalar_cache[2] end),
+    [3] = mib.ConstInt(function () return tcp_scalar_cache[3] end),
+    [4] = mib.ConstInt(function () return tcp_scalar_cache[4] end),
+    [5] = mib.ConstCount(function () return tcp_scalar_cache[5] end),
+    [6] = mib.ConstCount(function () return tcp_scalar_cache[6] end),
+    [7] = mib.ConstCount(function () return tcp_scalar_cache[7] end),
+    [8] = mib.ConstCount(function () return tcp_scalar_cache[8] end),
+    [9] = mib.ConstGauge(function () return tcp_scalar_cache[9] end),
+    [10] = mib.ConstCount(function () return tcp_scalar_cache[10] end),
+    [11] = mib.ConstCount(function () return tcp_scalar_cache[11] end),
+    [12] = mib.ConstCount(function () return tcp_scalar_cache[12] end),
     [13] = {                                  
         [1] = {                               
             indexes = tcp_conn_entry_cache,
-            [1] = mib.Int(function (sub_oid) load_config() return tcp_conn_entry_get(sub_oid, 'conn_stat') end,
-                          function (sub_oid, value) load_config() return tcp_conn_entry_set(sub_oid, value, 'conn_stat') end),
+            [1] = mib.Int(function (sub_oid) return tcp_conn_entry_get(sub_oid, 'conn_stat') end,
+                          function (sub_oid, value) return tcp_conn_entry_set(sub_oid, value, 'conn_stat') end),
             [2] = mib.ConstIpaddr(function (sub_oid)
-                                      load_config() 
                                       local ipaddr
                                       if type(sub_oid) == 'table' and tcp_conn_entry_cache[table.concat(sub_oid, ".")] then
                                           ipaddr = {}
@@ -194,7 +186,6 @@ local tcpGroup = {
                                       return ipaddr
                                   end),
             [3] = mib.ConstInt(function (sub_oid)
-                                  load_config() 
                                   if type(sub_oid) == 'table' and tcp_conn_entry_cache[table.concat(sub_oid, ".")] then
                                       return sub_oid[5]
                                   else
@@ -202,7 +193,6 @@ local tcpGroup = {
                                   end
                                end),
             [4] = mib.ConstIpaddr(function (sub_oid)
-                                      load_config() 
                                       local ipaddr
                                       if type(sub_oid) == 'table' and tcp_conn_entry_cache[table.concat(sub_oid, ".")] then
                                           ipaddr = {}
@@ -213,7 +203,6 @@ local tcpGroup = {
                                       return ipaddr
                                   end),
             [5] = mib.ConstInt(function (sub_oid)
-                                  load_config() 
                                   if type(sub_oid) == 'table' and tcp_conn_entry_cache[table.concat(sub_oid, ".")] then
                                       return sub_oid[10]
                                   else
@@ -222,8 +211,8 @@ local tcpGroup = {
                                end),
         }
     },
-    [14] = mib.ConstCount(function () load_config() return tcp_scalar_cache[13] end),
-    [15] = mib.ConstCount(function () load_config() return tcp_scalar_cache[14] end),
+    [14] = mib.ConstCount(function () return tcp_scalar_cache[13] end),
+    [15] = mib.ConstCount(function () return tcp_scalar_cache[14] end),
 }
 
 return tcpGroup

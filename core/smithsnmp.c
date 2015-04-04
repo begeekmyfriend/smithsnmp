@@ -363,7 +363,7 @@ smithsnmp_trap_varbind(lua_State *L)
     length(&var) = lua_objlen(L, 3);
     for (i = 0; i < length(&var); i++) {
       lua_rawgeti(L, 3, i + 1);
-      ipaddr(&var)[3 - i] = lua_tointeger(L, -1);
+      ipaddr(&var)[i] = lua_tointeger(L, -1);
       lua_pop(L, 1);
     }
     break;

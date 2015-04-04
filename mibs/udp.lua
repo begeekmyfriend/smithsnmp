@@ -40,31 +40,31 @@ local udp_scalar_cache = {}
 ]]
 
 local hextab = {
-  ['0'] = 0,
-  ['1'] = 1,
-  ['2'] = 2,
-  ['3'] = 3,
-  ['4'] = 4,
-  ['5'] = 5,
-  ['6'] = 6,
-  ['7'] = 7,
-  ['8'] = 8,
-  ['9'] = 9,
-  ['A'] = 10,
-  ['a'] = 10,
-  ['B'] = 11,
-  ['b'] = 11,
-  ['C'] = 12,
-  ['c'] = 12,
-  ['D'] = 13,
-  ['d'] = 13,
-  ['E'] = 14,
-  ['e'] = 14,
-  ['F'] = 15,
-  ['f'] = 15,
+    ['0'] = 0,
+    ['1'] = 1,
+    ['2'] = 2,
+    ['3'] = 3,
+    ['4'] = 4,
+    ['5'] = 5,
+    ['6'] = 6,
+    ['7'] = 7,
+    ['8'] = 8,
+    ['9'] = 9,
+    ['A'] = 10,
+    ['a'] = 10,
+    ['B'] = 11,
+    ['b'] = 11,
+    ['C'] = 12,
+    ['c'] = 12,
+    ['D'] = 13,
+    ['d'] = 13,
+    ['E'] = 14,
+    ['e'] = 14,
+    ['F'] = 15,
+    ['f'] = 15,
 }
 
-local function ip_hex2num(hex)
+local ip_hex2num = function(hex)
     assert(type(hex) == 'string' and #hex == 8)
     local num = {} 
     for i = 8, 2, -2 do
@@ -75,7 +75,7 @@ local function ip_hex2num(hex)
     return table.concat(num, ".")
 end
 
-local function port_hex2num(hex)
+local port_hex2num = function(hex)
     assert(type(hex) == 'string' and #hex == 4)
     local num = 0
     for i = 1, 4 do
@@ -84,7 +84,7 @@ local function port_hex2num(hex)
     return tostring(num)
 end
 
-local function __load_config()
+local __load_config = function()
     udp_scalar_cache = {}
     udp_entry_cache = {}
     for line in io.lines("/proc/net/snmp") do
@@ -107,17 +107,9 @@ end
 
 local last_load_time = os.time()
 
-local function need_to_reload()
-    if os.difftime(os.time(), last_load_time) < 3 then
-        return false
-    else
+local load_config = function()
+    if os.difftime(os.time(), last_load_time) > 3 then
         last_load_time = os.time()
-        return true
-    end
-end
-
-local function load_config()
-    if need_to_reload() == true then
         __load_config()
     end
 end
@@ -127,26 +119,25 @@ __load_config()
 mib.module_methods.or_table_reg("1.3.6.1.2.1.7", "The MIB module for managing UDP inplementations")
 
 local udpGroup = {
-    [udpInDatagrams]  = mib.ConstCount(function () load_config() return udp_scalar_cache[1] end),
-    [udpNoPorts]      = mib.ConstCount(function () load_config() return udp_scalar_cache[2] end),
-    [udpInErrors]     = mib.ConstCount(function () load_config() return udp_scalar_cache[3] end),
-    [udpOutDatagrams] = mib.ConstCount(function () load_config() return udp_scalar_cache[4] end),
+    io = load_config,
+    [udpInDatagrams]  = mib.ConstCount(function () return udp_scalar_cache[1] end),
+    [udpNoPorts]      = mib.ConstCount(function () return udp_scalar_cache[2] end),
+    [udpInErrors]     = mib.ConstCount(function () return udp_scalar_cache[3] end),
+    [udpOutDatagrams] = mib.ConstCount(function () return udp_scalar_cache[4] end),
     [udpTable] = {
         [1] = {
             indexes = udp_entry_cache,
             [1] = mib.ConstIpaddr(function (sub_oid)
-                                     load_config()
-                                     local ipaddr
-                                     if type(sub_oid) == 'table' and udp_entry_cache[table.concat(sub_oid, ".")] ~= nil then
-                                         ipaddr = {}
-                                         for i = 1, 4 do
-                                             table.insert(ipaddr, sub_oid[i])
-                                         end
-                                     end
-                                     return ipaddr
-                                end),
+                                      local ipaddr
+                                      if type(sub_oid) == 'table' and udp_entry_cache[table.concat(sub_oid, ".")] ~= nil then
+                                          ipaddr = {}
+                                          for i = 1, 4 do
+                                              table.insert(ipaddr, sub_oid[i])
+                                          end
+                                      end
+                                      return ipaddr
+                                  end),
             [2] = mib.ConstInt(function (sub_oid)
-                                   load_config()
                                    local port
                                    if type(sub_oid) == 'table' and udp_entry_cache[table.concat(sub_oid, ".")] ~= nil then
                                        port = sub_oid[5]

@@ -211,7 +211,7 @@ mib_instance_search(struct oid_search_res *ret_oid)
         length(var) = lua_objlen(L, -2);
         for (i = 0; i < length(var); i++) {
           lua_rawgeti(L, -2, i + 1);
-          ipaddr(var)[3 - i] = lua_tointeger(L, -1);
+          ipaddr(var)[i] = lua_tointeger(L, -1);
           lua_pop(L, 1);
         }
         break;
