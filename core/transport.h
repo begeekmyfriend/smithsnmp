@@ -31,7 +31,7 @@ struct transport_operation {
   int (*init)(int port);
   void (*running)(void);
   void (*stop)(void);
-  void (*send)(uint8_t *buf, int len, int trap);
+  void (*send)(uint8_t *buf, int len);
 };
 
 extern struct transport_operation snmp_transp_ops;

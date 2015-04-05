@@ -77,7 +77,7 @@ agentx_read_handler(int sock, unsigned char flag, void *ud)
 
 /* Send angentX PDU to the remote */
 static void
-transport_send(uint8_t *buf, int len, int trap)
+transport_send(uint8_t *buf, int len)
 {
   agentx_entry.buf = buf;
   agentx_entry.len = len;

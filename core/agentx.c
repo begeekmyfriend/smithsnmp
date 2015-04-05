@@ -43,7 +43,7 @@ agentx_receive(uint8_t *buf, int len)
 static void
 agentx_send(uint8_t *buf, int len)
 {
-  agentx_transp_ops.send(buf, len, 0);
+  agentx_transp_ops.send(buf, len);
 }
 
 /* Register mib group node */

@@ -22,7 +22,9 @@
 #include <stdio.h>
 
 #include "event_loop.h"
+#ifndef DISABLE_TRAP
 #include "trap.h"
+#endif
 
 #define SNMP_MAX_EVENTS  5
 

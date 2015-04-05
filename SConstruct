@@ -163,7 +163,7 @@ AddOption(
 env = Environment(
   ENV = os.environ,
   LIBS = ['m', 'dl'],
-  CFLAGS = ['-std=c99', '-g', '-Wall', '-D_XOPEN_SOURCE=600'],
+  CFLAGS = ['-std=c99', '-O2', '-Wall', '-D_XOPEN_SOURCE=600'],
 )
 
 # handle options/environment varibles.

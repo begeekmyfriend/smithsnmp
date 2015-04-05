@@ -48,7 +48,7 @@ snmpd_receive(uint8_t *buf, int len)
 static void
 snmpd_send(uint8_t *buf, int len)
 {
-  snmp_transp_ops.send(buf, len, 0);
+  snmp_transp_ops.send(buf, len);
 }
 
 /* Register mib group node */

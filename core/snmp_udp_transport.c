@@ -78,7 +78,7 @@ snmp_read_handler(int sock, unsigned char flag, void *ud)
 
 /* Send snmp datagram as a UDP packet to the remote */
 static void
-transport_send(uint8_t *buf, int len, int trap)
+transport_send(uint8_t *buf, int len)
 {
   snmp_entry.buf = buf;
   snmp_entry.len = len;

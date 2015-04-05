@@ -27,7 +27,9 @@
 
 #include "mib.h"
 #include "protocol.h"
+#ifndef DISABLE_TRAP
 #include "trap.h"
+#endif
 #include "utils.h"
 
 struct protocol_operation *smithsnmp_prot_ops;
@@ -293,6 +295,7 @@ smithsnmp_mib_user_unreg(lua_State *L)
   return 0;
 }
 
+#ifndef DISABLE_TRAP
 /* Enable trap feature */
 int
 smithsnmp_trap_open(lua_State *L)
@@ -422,6 +425,7 @@ smithsnmp_trap_send(lua_State *L)
 
   return 1;
 }
+#endif
 
 static const luaL_Reg smithsnmp_func[] = {
   { "init", smithsnmp_init },
@@ -435,10 +439,12 @@ static const luaL_Reg smithsnmp_func[] = {
   { "mib_user_create", smithsnmp_mib_user_create },
   { "mib_user_reg", smithsnmp_mib_user_reg },
   { "mib_user_unreg", smithsnmp_mib_user_unreg },
+#ifndef DISABLE_TRAP
   { "trap_open", smithsnmp_trap_open },
   { "trap_close", smithsnmp_trap_close },
   { "trap_varbind", smithsnmp_trap_varbind },
   { "trap_send", smithsnmp_trap_send },
+#endif
   { NULL, NULL }
 };
 
