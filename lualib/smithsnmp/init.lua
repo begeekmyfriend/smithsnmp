@@ -787,8 +787,8 @@ local mib_node_search = function(group, name, op, req_sub_oid, req_val, req_val_
     end
 
     -- Pre-process IO for mib group
-    if group.io ~= nil then
-        group.io()
+    if group.io_f ~= nil then
+        group.io_f()
     end
     -- Regenerate mib group indexes before handler process
     group_index_table = mib_group_indexes_generate(group, name)

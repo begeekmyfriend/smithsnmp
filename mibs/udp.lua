@@ -119,7 +119,7 @@ __load_config()
 mib.module_methods.or_table_reg("1.3.6.1.2.1.7", "The MIB module for managing UDP inplementations")
 
 local udpGroup = {
-    io = load_config,
+    io_f = load_config,
     [udpInDatagrams]  = mib.ConstCount(function () return udp_scalar_cache[1] end),
     [udpNoPorts]      = mib.ConstCount(function () return udp_scalar_cache[2] end),
     [udpInErrors]     = mib.ConstCount(function () return udp_scalar_cache[3] end),

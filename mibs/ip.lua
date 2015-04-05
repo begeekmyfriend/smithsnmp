@@ -150,7 +150,7 @@ local ip_NetToMedia_entry_set = function(sub_oid, v, name)
 end
 
 local ipGroup = {
-    io = load_config,
+    io_f = load_config,
     [1]  = mib.Int(function () return ip_scalar_cache[1] end, function (v) ip_scalar_cache[1] = v end),
     [2]  = mib.Int(function () return ip_scalar_cache[2] end, function (v) ip_scalar_cache[2] = v end),
     [3]  = mib.ConstInt(function () return ip_scalar_cache[3] end),

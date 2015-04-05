@@ -47,7 +47,7 @@ __load_config()
 mib.module_methods.or_table_reg("1.3.6.1.2.1.5", "The MIB module for managing icmp and ICMP inplementations")
 
 local icmpGroup = {
-    io = load_config,
+    io_f = load_config,
     [1]  = mib.ConstCount(function () return icmp_scalar_cache[1] end),
     [2]  = mib.ConstCount(function () return icmp_scalar_cache[2] end),
     [3]  = mib.ConstCount(function () return icmp_scalar_cache[4] end),

@@ -157,7 +157,7 @@ local tcp_conn_entry_set = function(sub_oid, value, name)
 end
 
 local tcpGroup = {
-    io = load_config,
+    io_f = load_config,
     [1] = mib.ConstInt(function () return tcp_scalar_cache[1] end),
     [2] = mib.ConstInt(function () return tcp_scalar_cache[2] end),
     [3] = mib.ConstInt(function () return tcp_scalar_cache[3] end),
