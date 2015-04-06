@@ -403,15 +403,23 @@ smithsnmp_trap_send(lua_State *L)
   int version = luaL_checkint(L, 1);
   const char *community = luaL_checkstring(L, 2);
   uint8_t i, ip[4];
+  uint32_t host = 0;
 
   /* ip address */
   luaL_checktype(L, 3, LUA_TTABLE);
   for (i = 0; i < lua_objlen(L, 3); i++) {
     lua_rawgeti(L, 3, i + 1);
-    ip[3 - i] = lua_tointeger(L, -1);
+    ip[i] = lua_tointeger(L, -1);
     lua_pop(L, 1);
   }
-  uint32_t host = *(uint32_t *)ip;
+
+  for (i = 0; i < sizeof(ip); i++) {
+#ifdef LITTLE_ENDIAN
+    host |= ip[i] << (8 * (sizeof(ip) - 1 - i));
+#else
+    host |= ip[i] << (8 * i);
+#endif
+  }
 
   /* port */
   int port = luaL_checkint(L, 4);

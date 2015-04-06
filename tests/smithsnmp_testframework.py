@@ -224,21 +224,7 @@ class SmithSNMPTestFramework:
 		self.snmp.expect("SmithSNMP .+\r\n")
 
 	def snmp_teardown(self):
-		import signal
-
-		wait_time = 60 * 60 * 3 # 3 hours
-
-		for i in range(wait_time):
-			print 'Try to kill SmithSNMP Agent (%d)...' % i
-			self.snmp.kill(signal.SIGINT)
-			time.sleep(0.1)
-			if self.snmp.isalive() is True:
-				time.sleep(0.9)
-			else:
-				break
-		
-		if i == wait_time - 1:
-			raise Exception("Can't Stop SmithSNMP Agent")
+		self.snmp.close()
 
 	def agentx_setup(self, config_file):
 		print "Starting NET-SNMP Agent (Master Mode)..."
@@ -251,27 +237,5 @@ class SmithSNMPTestFramework:
 		self.agentx.expect("SmithSNMP .+\r\n")
 
 	def agentx_teardown(self):
-		import signal
-		wait_time = 60 * 60 * 3 # 3 hours
-
-		for i in range(wait_time):
-			print 'Try to kill SmithSNMP Sub-Agent (%d)...' % i
-			self.agentx.kill(signal.SIGINT)
-			time.sleep(0.1)
-			if self.agentx.isalive() is True:
-				time.sleep(0.9)
-			else:
-				break
-		if i == wait_time - 1:
-			raise Exception("Can't Stop SmithSNMP Sub-Agent")
-		
-		for i in range(wait_time):
-			print 'Try to kill Net-SNMP Agent (%d)...' % i
-			self.netsnmp.kill(signal.SIGKILL)
-			time.sleep(0.1)
-			if self.netsnmp.isalive() is True:
-				time.sleep(0.9)
-			else:
-				break
-		if i == wait_time - 1:
-			raise Exception("Can't Stop Net-SNMP Agent")
+		self.agentx.close()
+		self.netsnmp.close()
