@@ -1,25 +1,54 @@
-How To Write MIB Groups for SmithSNMP
+How To Write MIB Groups For SmithSNMP
 =====================================
 
-This document is a simple tutorial on how to write mib groups in Lua for the
-upper businesses of SmithSNMP.
+This document is a simple tutorial on how to write mib groups in SmithSNMP. You
+will learn to build your own management information bases in Lua instead of a
+pile of APIs. Let us go when you get ready!
 
 Configuration
 -------------
 
-First we would tell you on how to write the configuration file. Now we have had
-two examples shown in `config` directroy which indicate such fields as protocol
-name, port number and mib module path.
+First we would tell you on how to write the configuration file. Now we have two
+examples shown in `config` directroy indicating some fields as protocol name,
+port number and mib module path.
 
     protocol = 'snmp'
     port = 161
     mib_module_path = 'mibs'
 
-As for access control, to set community string for SNMPv2c and user name for
-SNMPv3, we have defined two fields in a Lua table: 'name' and 'views'. 'name' is
-the string, and 'views' is the set of oid views to be allowed to be accessed
-(e.x. "." means all nodes registered are available) with respective read and
-write permissions.
+Good! Next you can register your mib modules which are shown as Lua files under
+"mib_module_path". And they will be loaded at the start of the agent. As we all
+know, Lua has a very useful data structure called Table which contains a pair of
+key and value. Now we provide a Lua table called "mib_modules" to contain the
+group oid as the key and the group name as the value.
+
+    mib_modules = {
+        [".1.3.6.1.2.1.1"] = 'system',
+        [".1.3.6.1.2.1.2"] = 'interfaces',
+        [".1.3.6.1.2.1.4"] = 'ip',
+        [".1.3.6.1.2.1.6"] = 'tcp',
+        [".1.3.6.1.2.1.7"] = 'udp',
+        ...
+    }
+
+A pair of group oid and name represents a mib module. The group oid is the
+prefix of the whole oid of an object and will be registered in core module just
+after the start of the agent. And the group name can be whatever as you like.
+
+**Note:** In AgentX mode the group oid should NOT conflict with those in master
+agent, otherwise the access control of the master will keep those mib groups in
+sub-agent from registry.
+
+Very good! As for access control, Different SNMP versions have different access
+methods. For example, SNMPv2c is based on community string and SNMPv3 is on user
+authentication. You may regard it as a passport in which there are not only a
+name but also an access domain called "view". An mib view is also a Lua table
+containing an oid as the key and the read-write permission as the value. The oid
+key indicates the nodes you can access under that oid cover. Especially "."
+means all nodes registered are available. The permission have two value, 'ro'
+means read-only and 'rw' means read-write. You can specify permissions for
+different mib views. There two users called Jack and Rose, Jack can write in Rose
+read-only mib view and vice versa.
 
     communities = {
         { community = 'public', views = { ["."] = 'ro' } },
@@ -43,41 +72,26 @@ write permissions.
         }
     }
 
-
-To register mib modules, we provide a Lua table called 'mib_modules' containing
-the oid and the name of mib groups:
-
-    mib_modules = {
-        [".1.3.6.1.2.1.1"] = 'system',
-        [".1.3.6.1.2.1.2"] = 'interfaces',
-        [".1.3.6.1.2.1.4"] = 'ip',
-        [".1.3.6.1.2.1.6"] = 'tcp',
-        [".1.3.6.1.2.1.7"] = 'udp',
-        ...
-    }
-
-A pair of group oid and name represents a mib module. The group oid is shown as
-the prefix of the whole oid in SNMP requests and will be registered in mib tree
-in core just after the start of the agent. And the group name can be whatever as
-you like.
-
-**Note:** In AgentX mode the group node should NOT conflict with those in master
-agent, otherwise the access control of the master will keep that mib group in
-sub-agent from registry.
+Excellent! Here are the whole configuration you need to know.
 
 MIB Examples
 ------------
 
-MIB group examples are shown in `mibs` directory. It is noted that each group
-should be the bottom node in the mib tree as convention. Nested groups are not
-allowed in our examples. A group is represented by a Lua table as the first
-class data structure in Lua and will be returned by the mib file when loaded.
+The real challenge begins! Just build your own MIB right now. MIB group examples
+are shown in `mibs` directory. It is noted that each group should be the bottom
+node in the mib tree. Nested groups are not allowed in our examples. A group is
+represented by a Lua table (hope you still remember this omnipotent data
+structure) and will be returned by the mib file when loaded. Now please build
+the "sysGroup".
 
     local sysGroup = {
         ...
     }
 
     return sysGroup
+
+Tips: You would better always use "local" key word to decorate "sysGroup" in
+case of polluting the Lua global environment.
 
 In the group container, we can define four objects as mentioned in SNMP RFC:
 Scalar, Table, Entry and Variable. SmithSNMP also provides relevant constructor
@@ -87,15 +101,15 @@ Variable Constructor
 --------------------
 
 The constructor methods of each group variable are defined in `init.lua`. The
-signature of each constructor indicates the ASN.1 tags and the read/write access
+signature of each constructor indicates the ASN.1 tags and the access
 permissions of each mib variable. The arguments of the constructor are get/set
-methods of the data value set by users since function is the first-class value
+methods of the data defined by MIB users since function is the first-class value
 in Lua. Before we start to write it, we shall require the `init.lua` to get
 access to these methods.
 
 Let us take `system.lua` as an example. In this file we have defined a Lua table
-called 'sysGroup' representing the system mib group. In this group, we need to
-constructure a scalar object named 'sysDesc' which can show the full name and
+called "sysGroup" representing the system mib group. In this group, we need to
+constructure a scalar object named "sysDesc" which can show the full name and
 version identification of the system hardware type, software OS and networking.
 So we can write the variable constructor like this.
 
@@ -107,12 +121,13 @@ So we can write the variable constructor like this.
     }
     return sysGroup
 
-The 'sysDesc' is the group table indice and defined as a scalar object id.
-'mib.ConstString' shows that the variable is read-only and string type. And then
-we have defined a get method which returns 'mib.sh_call' method provided by
-`init.lua` as required before. When the method invoked, Lua VM will execute a
-shell command and return a string value. We do not need to write a set method
-because the scalar object is read-only.
+The "mib" is the reference of the constructor methods defined in `init.lua`. The
+"sysDesc" is the group table indice as a scalar object id. "mib.ConstString"
+shows that the variable is read-only and string type. And the get method which
+returns a new method called "mib.sh_call" provided by "mib" as required before.
+When the get method invoked, Lua VM will execute a shell command and return a
+string value. We do not need to write a set method because the scalar object is
+read-only.
 
 Table and Entry
 ---------------
@@ -120,7 +135,7 @@ Table and Entry
 Next we will implement 'sysORTable' and 'sysOREntry'. In SmithSNMP Table and
 Entry are also represented by Lua tables. However, the get/set methods are
 somewhat different from those in scalar object because Table and Entry are
-sequence objects.
+sequence objects which you can regard as columns of a two-dimensional table.
 
     local function or_entry_get(i, name)
         assert(type(name) == 'string')
@@ -148,21 +163,22 @@ sequence objects.
     }
 
 **Note:** One table object can hold only one entry object. If you want one more
-entry object, define another table object to contain it.
+entry objects, define another table object to contain it.
 
-In 'sysORTable' we have defined 'or_entry_cache' recording the ORTable
-information. It is referred to by 'indexes' field so as to tell SmithSNMP the
-lexicographical traversal order of 'sysORTable' by generating a temporal index
-table through `init.lua`.
+In "sysORTable" we have defined "or_entry_cache" recording the ORTable
+information. It is referred to by the "indexes" field so as to tell SmithSNMP
+the lexicographical traversal order of "sysORTable" by generating a temporal
+indexes table in `init.lua`.
 
-Now there are four variables in 'sysOREntry'. The 'sysORIndex' is the index
-variable of 'sysOREntry'. Its get method would return [value, err_stat] pair so
-as to show that this variable is unaccessible (invisible in SNMP response).  The
-'err_stat' can be a dummy value as defaut which can be ignored in return. Other
-variables are stored in 'or_entry_cache' which can load data value from
-configuration files or other non-RAM places. The 'or_entry_cache' comprises
-several rows, each of them corresponds to the lexicographical sorted variable in
-'sysOREntry'.
+If you do not want some variables to be shown in the query, define their get
+methods to return [value, err_stat] pair so as to indicate that the variable is
+unaccessible (invisible in SNMP response). The "err_stat" can be a dummy value
+as defaut which will be ignored in return. That can be regarded as a further
+access control method.
+
+Variables stored in "or_entry_cache" can load data from configuration files or
+other non-RAM places. The "or_entry_cache" is comprised of several rows, each of
+them corresponds to the lexicographical sorted variable in "sysOREntry".
 
     local row = {
         oid = { 1, 3, 6, 1, 2, 1, 1 },
@@ -171,16 +187,24 @@ several rows, each of them corresponds to the lexicographical sorted variable in
     }
     table.insert(or_entry_cache, row)
 
-Long Index
-----------
+Above all are the MIB object constructors. There is no need worring about APIs.
+Hurrah!
 
-There are three styles of variable indexes referred to by 'indexes' field in
-entry objects: single index, long index, and cascaded index.
+Data Indexes
+------------
 
-Long index is a string of multiple continous oid numbers such as an IP address
-(maybe following a port number). In 'udpTable' we examplified that with two
-entry objects and the 'udp_entry_cache'. By the way, you would better check if
-the type of 'sub_oid' argument is Lua table when it is passed down.
+Now let us proceed to more advanced features! There are three styles of variable
+indexes referred to by the "indexes" field in entry objects: single index, long
+index, and cascaded index.
+
+**Single index** has only one oid and it increments according to the natural
+number when a new row is inserted.
+
+**Long index** is comprised of multiple oid numbers such as an IP address (maybe
+following a port number). In "udpTable" we examplify that with two entry objects
+and their indexes will be concatenated in "udp_entry_cache" referred to by the
+"indexes" field. By the way, you would better check if the type of "sub_oid"
+argument is a Lua table when it is passed down.
 
     local udp_entry_cache = {
         ["0.0.0.0.67"] = {},
@@ -216,13 +240,10 @@ the type of 'sub_oid' argument is Lua table when it is passed down.
         }
     }
 
-Cascaded Indexes
-----------------
-
-SmithSNMP also supports cascaded indexes in Table and Entry. 'TwoIndexTable' and
-'ThreeIndexTable' group respectively show the two-index-cascaded and
-three-index-cascaded indexing. The entry cache that 'indexes' field refers to is
-written as below, note we have used a bool indicator called 'cascaded'.
+SmithSNMP also supports **cascaded index** in Table and Entry. "TwoIndexTable"
+and "ThreeIndexTable" group respectively show the two-index-cascaded and
+three-index-cascaded indexes. The entry cache that "indexes" field refers to is
+written as below, note we need to use a bool indicator called "cascaded".
 
     local two_dim_entry_cache = {
         cascade = true,
@@ -247,12 +268,26 @@ written as below, note we have used a bool indicator called 'cascaded'.
         ...
     }
 
-Indexes Verification
---------------------
+OR Table Register
+-----------------
 
-After you have finished your private mibs, you may check if each group can be
-walked in lexicographical order correctly by using 'mib.group_index_table_check'
-method before it returns in the lua file. 
+A new registered mib group can be stored as a record in "sysORTable" (if there
+are any) by calling "mib.module_methods.or_table_reg" with arguments of a string
+of group oid and a piece of description:
+
+    mib.module_methods.or_table_reg("1.3.6.1.2.1.4", "The MIB module for managing IP and ICMP inplementations")
+
+Then the registry of the new group will be shown as three fields of "sysORID",
+"sysORDesc" and "sysORUpTime" stored in "sysORTable" and shown in SNMP query
+response later.
+
+Debugging
+---------
+
+Here coming the end of the whole work! After you finish your own mibs, you may
+urge to know whether they can be walked in lexicographical order correctly. Eh,
+just add "mib.group_index_table_check" method in the place before the group to
+be returned in the mib file and then pray to God...
 
     local udpGroup = {
         ...
@@ -260,18 +295,7 @@ method before it returns in the lua file.
     mib.group_index_table_check(udpGroup, 'udpGroup')
     return udpGroup
 
-This method will print all the indexes of the group on terminal and help you
-roughly locate the invalid indexes of the group that you have constructured.
-
-OR Table Register
------------------
-
-A new registered mib group can be stored as a record in 'sysORTable'(if there
-are any) by calling 'mib.module_methods.or_table_reg' with arguments of a string
-of group oid and a piece of description:
-
-    mib.module_methods.or_table_reg("1.3.6.1.2.1.4", "The MIB module for managing IP and ICMP inplementations")
-
-Then the registry of the new group will be shown as three fields of 'sysORID',
-'sysORDesc' and 'sysORUpTime' stored in 'sysORTable' and shown in SNMP query
-response later.
+This method will print all the indexes of the mib group on the terminal and help
+you locate the invalid indexes that you have mistaken. When it echoes "OK", then
+congratulations! You have made them all and just go home as the first guy in
+your office!
