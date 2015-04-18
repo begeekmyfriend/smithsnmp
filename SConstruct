@@ -112,8 +112,8 @@ AddOption(
   type='string',
   nargs=1,
   action='store',
-  metavar='CFLAGS',
-  help='use CFLAGS as compile time arguments (will ignore CFLAGS env)'
+  metavar='CCFLAGS',
+  help='use CCFLAGS as compile time arguments (will ignore CCFLAGS env)'
 )
 
 AddOption(
@@ -163,18 +163,19 @@ AddOption(
 env = Environment(
   ENV = os.environ,
   LIBS = ['m', 'dl'],
-  CFLAGS = ['-std=c99', '-O2', '-Wall', '-D_XOPEN_SOURCE=600'],
+  CCFLAGS = ['-std=c99', '-O2', '-Wall'],
+  CPPDEFINES = {'_XOPEN_SOURCE' : '600'},
 )
 
 # handle options/environment varibles.
 if os.environ.has_key('CC'):
   env.Replace(CC = os.environ['CC'])
 
-# CFLAGS
+# CCFLAGS
 if GetOption("cflags") != "":
-  env.Append(CFLAGS = GetOption("cflags"))
-elif os.environ.has_key('CFLAGS'):
-  env.Append(CFLAGS = os.environ['CFLAGS'])
+  env.Append(CCFLAGS = GetOption("cflags"))
+elif os.environ.has_key('CCFLAGS'):
+  env.Append(CCFLAGS = os.environ['CCFLAGS'])
 
 # LDFLAGS
 if GetOption("ldflags") != "":
@@ -194,9 +195,9 @@ if GetOption("liblua_dir") != "":
 
 # event loop check
 if GetOption("evloop") == 'epoll':
-  env.Append(CFLAGS = ["-DUSE_EPOLL"])
+  env.Append(CPPDEFINES = ["USE_EPOLL"])
 elif GetOption("evloop") == 'kqueue':
-  env.Append(CFLAGS = ["-DUSE_KQUEUE"])
+  env.Append(CPPDEFINES = ["USE_KQUEUE"])
 elif GetOption("evloop") == 'select' or GetOption("evloop") == '':
   pass
 else:
@@ -209,9 +210,9 @@ conf = Configure(env, custom_tests = {'CheckEpoll' : CheckEpoll, 'CheckSelect' :
 # endian check
 endian = conf.CheckEndian()
 if endian == 'Big':
-  env.Append(CFLAGS = ["-DBIG_ENDIAN"])
+  env.Append(CPPDEFINES = ["BIG_ENDIAN"])
 elif endian == 'Little':
-  env.Append(CFLAGS = ["-DLITTLE_ENDIAN"])
+  env.Append(CPPDEFINES = ["LITTLE_ENDIAN"])
 else:
   raise SConfError("Error when testing the endian.")
 
@@ -232,10 +233,10 @@ else:
   print "Error: Not the right event driving type"
   Exit(1)
 
-# CFLAGS
+# CCFLAGS
 if GetOption("gcov") == "yes":
   env.Append(
-    CFLAGS = ['-fprofile-arcs', '-ftest-coverage'],
+    CCFLAGS = ['-fprofile-arcs', '-ftest-coverage'],
     LINKFLAGS = ['-fprofile-arcs', '-ftest-coverage'],
   )
 
@@ -252,7 +253,7 @@ else:
 if conf.CheckCHeader('lua.h'):
   pass
 elif conf.CheckCHeader('lua5.1/lua.h'):
-  env.Append(CFLAGS = ['-I/usr/include/lua5.1'])
+  env.Append(CCFLAGS = ['-I/usr/include/lua5.1'])
 else:
   print "Error: lua.h not found"
   Exit(1)
@@ -271,34 +272,34 @@ src = env.Glob("core/smithsnmp.c") + env.Glob("core/event_loop.c") + env.Glob("c
 # AGENTX
 if GetOption("agentx") != "":
   src += agentx_src
-  env.Append(CFLAGS = ["-DUSE_AGENTX"])
+  env.Append(CPPDEFINES = ["USE_AGENTX"])
 
 # DISABLE TRAP
 if GetOption("dis_trap") != "":
   trap_src = []
-  env.Append(CFLAGS = ["-DDISABLE_TRAP"])
+  env.Append(CPPDEFINES = ["DISABLE_TRAP"])
 
 # DISABLE CRYPTO
 if GetOption("dis_crypto") != "":
   md5_src = []
   sha_src = []
   aes_src = []
-  env.Append(CFLAGS = ["-DDISABLE_CRYPTO"])
+  env.Append(CPPDEFINES = ["DISABLE_CRYPTO"])
 
 # DISABLE MD5
 if GetOption("dis_md5") != "":
   md5_src = []
-  env.Append(CFLAGS = ["-DDISABLE_MD5"])
+  env.Append(CPPDEFINES = ["DISABLE_MD5"])
 
 # DISABLE SHA
 if GetOption("dis_sha") != "":
   sha_src = []
-  env.Append(CFLAGS = ["-DDISABLE_SHA"])
+  env.Append(CPPDEFINES = ["DISABLE_SHA"])
 
 # DISABLE AES
 if GetOption("dis_aes") != "":
   aes_src = []
-  env.Append(CFLAGS = ["-DDISABLE_AES"])
+  env.Append(CPPDEFINES = ["DISABLE_AES"])
 
 src += [trap_src, md5_src, sha_src, aes_src]
 
