@@ -10,7 +10,6 @@ install:
   - "sudo -H pip -q install PyYAML cpp-coveralls"
   - "sudo luarocks install Lua-cURL"
   - "sudo luarocks install luacov-coveralls"
-  - "sudo luarocks install lunitx"
   - "./tests/netsnmp_build.sh"
 
 script:
