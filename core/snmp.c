@@ -84,7 +84,7 @@ snmpd_open(void)
 static int
 snmpd_close(void)
 {
-  snmp_transp_ops.stop();
+  snmp_transp_ops.close();
   return 0;
 }
 

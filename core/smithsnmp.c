@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <signal.h>
 
 #include "mib.h"
 #include "protocol.h"
@@ -35,26 +34,12 @@
 struct protocol_operation *smithsnmp_prot_ops;
 struct trap_operation *smithsnmp_trap_ops;
 
-void
-sig_int_handler(int dummy)
-{
-  smithsnmp_prot_ops->close();
-  exit(0);
-}
-
 int
 smithsnmp_init(lua_State *L)
 {
   int ret;
-  struct sigaction sa;
   const char *protocol = luaL_checkstring(L, 1);
   int port = luaL_checkint(L, 2);
-
-  /* Register interrupt signal handler */
-  sa.sa_handler = sig_int_handler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sigaction(SIGINT, &sa, NULL);
 
   /* Init mib tree */
   mib_init(L);

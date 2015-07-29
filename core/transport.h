@@ -30,7 +30,7 @@ struct transport_operation {
   const char *name;
   int (*init)(int port);
   void (*running)(void);
-  void (*stop)(void);
+  void (*close)(void);
   void (*send)(uint8_t *buf, int len);
 };
 

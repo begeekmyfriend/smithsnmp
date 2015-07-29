@@ -20,12 +20,14 @@
  */
 
 #include <sys/socket.h>
+#include <sys/signalfd.h>
 #include <netinet/in.h>
 
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #include "transport.h"
 #include "protocol.h"
@@ -34,12 +36,20 @@
 
 struct snmp_data_entry {
   int sock;
+  int sigfd;
   uint8_t *buf;
   int len;
   struct sockaddr_in client_sin;
 };
 
 static struct snmp_data_entry snmp_entry;
+static void transport_close(void);
+
+static void
+snmp_signal_handler(int signo, unsigned char flag, void *ud)
+{
+  transport_close();
+}
 
 static void
 snmp_write_handler(int sock, unsigned char flag, void *ud)
@@ -90,21 +100,37 @@ transport_running(void)
 {
   snmp_event_init();
   snmp_event_add(snmp_entry.sock, SNMP_EV_READ, snmp_read_handler, NULL);
+  snmp_event_add(snmp_entry.sigfd, SNMP_EV_READ, snmp_signal_handler, NULL);
   snmp_event_run();
 }
 
 static void
-transport_stop(void)
+transport_close(void)
 {
   snmp_event_done();
   close(snmp_entry.sock);
+  close(snmp_entry.sigfd);
 }
 
 static int
 transport_init(int port)
 {
+  sigset_t mask;
   struct sockaddr_in sin;
 
+  /* SNMP signal */
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGINT);
+  sigaddset(&mask, SIGQUIT);
+  sigprocmask(SIG_BLOCK, &mask, NULL);
+
+  snmp_entry.sigfd = signalfd(-1, &mask, 0);
+  if (snmp_entry.sigfd < 0) {
+    perror("usignal");
+    return -1;
+  }
+
+  /* SNMP socket */
   snmp_entry.sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (snmp_entry.sock < 0) {
     perror("usock");
@@ -134,6 +160,6 @@ struct transport_operation snmp_transp_ops = {
   "snmp_udp",
   transport_init,
   transport_running,
-  transport_stop,
+  transport_close,
   transport_send,
 };

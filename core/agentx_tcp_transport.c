@@ -20,12 +20,14 @@
  */
 
 #include <sys/socket.h>
+#include <sys/signalfd.h>
 #include <netinet/in.h>
 
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #include "agentx.h"
 #include "transport.h"
@@ -34,12 +36,20 @@
 #include "utils.h"
 
 struct agentx_data_entry {
+  int sigfd;
   int sock;
   uint8_t *buf;
   int len;
 };
 
 static struct agentx_data_entry agentx_entry;
+static void transport_close(void);
+
+static void
+agentx_signal_handler(int signo, unsigned char flag, void *ud)
+{
+  transport_close();
+}
 
 static void
 agentx_write_handler(int sock, unsigned char flag, void *ud)
@@ -89,26 +99,43 @@ transport_running(void)
 {
   snmp_event_init();
   snmp_event_add(agentx_entry.sock, SNMP_EV_READ, agentx_read_handler, NULL);
+  snmp_event_add(agentx_entry.sigfd, SNMP_EV_READ, agentx_signal_handler, NULL);
   snmp_event_run();
 }
 
 static void
-transport_stop(void)
+transport_close(void)
 {
   snmp_event_done();
   close(agentx_entry.sock);
+  close(agentx_entry.sigfd);
 }
 
 static int
 transport_init(int port)
 {
+  sigset_t mask;
   struct sockaddr_in sin;
 
-  agentx_datagram.sock = agentx_entry.sock = socket(AF_INET, SOCK_STREAM, 0);
+  /* AgnetX signal */
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGINT);
+  sigaddset(&mask, SIGQUIT);
+  sigprocmask(SIG_BLOCK, &mask, NULL);
+
+  agentx_entry.sigfd = signalfd(-1, &mask, 0);
+  if (agentx_entry.sigfd < 0) {
+    perror("usignal");
+    return -1;
+  }
+
+  /* AgnetX socket */
+  agentx_entry.sock = socket(AF_INET, SOCK_STREAM, 0);
   if (agentx_entry.sock < 0) {
     perror("usock");
     return -1;
   }
+  agentx_datagram.sock = agentx_entry.sock;
 
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
@@ -133,6 +160,6 @@ struct transport_operation agentx_transp_ops = {
   "agentx_tcp",
   transport_init,
   transport_running,
-  transport_stop,
+  transport_close,
   transport_send,
 };

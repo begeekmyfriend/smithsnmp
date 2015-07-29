@@ -191,7 +191,7 @@ agentx_close(void)
     return -1;
   }
   
-  agentx_transp_ops.stop();
+  agentx_transp_ops.close();
   return 0;
 }
 
