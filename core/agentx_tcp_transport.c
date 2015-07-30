@@ -46,9 +46,15 @@ static struct agentx_data_entry agentx_entry;
 static void transport_close(void);
 
 static void
-agentx_signal_handler(int signo, unsigned char flag, void *ud)
+agentx_signal_handler(int sigfd, unsigned char flag, void *ud)
 {
-  transport_close();
+  int len;
+  struct signalfd_siginfo siginfo;
+
+  len = read(sigfd, &siginfo, sizeof(siginfo));
+  if (len == sizeof(siginfo) && siginfo.ssi_signo == SIGINT) {
+    transport_close();
+  }
 }
 
 static void
@@ -120,7 +126,6 @@ transport_init(int port)
   /* AgnetX signal */
   sigemptyset(&mask);
   sigaddset(&mask, SIGINT);
-  sigaddset(&mask, SIGQUIT);
   sigprocmask(SIG_BLOCK, &mask, NULL);
 
   agentx_entry.sigfd = signalfd(-1, &mask, 0);

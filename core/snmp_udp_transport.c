@@ -46,9 +46,15 @@ static struct snmp_data_entry snmp_entry;
 static void transport_close(void);
 
 static void
-snmp_signal_handler(int signo, unsigned char flag, void *ud)
+snmp_signal_handler(int sigfd, unsigned char flag, void *ud)
 {
-  transport_close();
+  int len;
+  struct signalfd_siginfo siginfo;
+
+  len = read(sigfd, &siginfo, sizeof(siginfo));
+  if (len == sizeof(siginfo) && siginfo.ssi_signo == SIGINT) {
+    transport_close();
+  }
 }
 
 static void
@@ -60,7 +66,6 @@ snmp_write_handler(int sock, unsigned char flag, void *ud)
     perror("sendto()");
     snmp_event_done();
   }
-
   free(entry->buf);
 
   snmp_event_remove(sock, flag);
@@ -121,7 +126,6 @@ transport_init(int port)
   /* SNMP signal */
   sigemptyset(&mask);
   sigaddset(&mask, SIGINT);
-  sigaddset(&mask, SIGQUIT);
   sigprocmask(SIG_BLOCK, &mask, NULL);
 
   snmp_entry.sigfd = signalfd(-1, &mask, 0);
