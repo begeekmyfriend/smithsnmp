@@ -241,11 +241,7 @@ if GetOption("gcov") == "yes":
   )
 
 # find liblua. On Ubuntu, liblua is named liblua5.1, so we need to check this.
-if conf.CheckLib('lua'):
-  env.Append(LIBS = ['lua'])
-elif conf.CheckLib('lua5.1'):
-  env.Append(LIBS = ['lua5.1'])
-else:
+if not conf.CheckLib('lua') and not conf.CheckLib('lua5.1'):
   print "Error: liblua or liblua5.1 not found!"
   Exit(1)
 
