@@ -16,7 +16,6 @@ script:
   - "scons --with-agentx --evloop=$EVLOOP --gcov=yes"
   - "sudo LUACOV=1 SYS_LUA_PATH=`$LUA -e 'print(package.path)'` LUA=$LUA python ./tests/test_all.py"
   - "sudo chmod 666 luacov.stats.out"
-  - "$LUA -lluacov tests/test_utils.lua"
 
 after_success:
   - "cpp-coveralls -b . -e .sconf_temp `ls core/*.gcno | sed 's/\\.gcno$/.c/' | sed 's/^/-i /'` --dump c.report.json"
