@@ -67,7 +67,7 @@ __ev_remove(struct snmp_event *event, unsigned char flag)
   if (flag & SNMP_EV_WRITE) {
     EV_SET(&ke, event->fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
   } 
-  kevent(state->kqfd, &ke, 1, NULL, 0, NULL);
+  kevent(env.kqfd, &ke, 1, NULL, 0, NULL);
 }
 
 static int
@@ -79,9 +79,9 @@ __ev_poll(struct snmp_event_loop *ev_loop)
     struct timespec tv;
     tv.tv_sec = ev_loop->timeout / 1000;
     tv.tv_nsec = ev_loop->timeout % 1000 * 1000 * 1000;
-    nfds = kevent(kqfd, NULL, 0, env.event, SNMP_MAX_EVENTS, &tv);
+    nfds = kevent(env.kqfd, NULL, 0, env.event, SNMP_MAX_EVENTS, &tv);
   } else {
-    nfds = kevent(kqfd, NULL, 0, env.event, SNMP_MAX_EVENTS, NULL);
+    nfds = kevent(env.kqfd, NULL, 0, env.event, SNMP_MAX_EVENTS, NULL);
   }
 
   if (nfds > 0) {
