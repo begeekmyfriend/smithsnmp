@@ -84,16 +84,14 @@ __ev_poll(struct snmp_event_loop *ev_loop)
     nfds = kevent(env.kqfd, NULL, 0, env.event, SNMP_MAX_EVENTS, NULL);
   }
 
-  if (nfds > 0) {
-    for (i = 0; i < SNMP_MAX_EVENTS; i++) {
-      struct kevent *ke = &env.event[i];
-      struct snmp_event *event = &ev_loop->event[i];
-      if (ke->filter == EVFILT_READ) {
-        event->read = 1;
-      }
-      if (ke->filter == EVFILT_WRITE) {
-        event->write = 1;
-      }
+  for (i = 0; i < nfds; i++) {
+    struct kevent *ke = &env.event[i];
+    struct snmp_event *event = &ev_loop->event[i];
+    if (ke->filter == EVFILT_READ) {
+      event->read = 1;
+    }
+    if (ke->filter == EVFILT_WRITE) {
+      event->write = 1;
     }
   }
 

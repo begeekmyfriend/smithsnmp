@@ -73,7 +73,7 @@ __ev_remove(struct snmp_event *event, unsigned char flag)
   }
   if (flag & SNMP_EV_WRITE) {
     ee.events &= ~EPOLLOUT;
-  } 
+  }
   if (ee.events == 0) {
     epoll_ctl(env.epfd, EPOLL_CTL_DEL, event->fd, &ee);
   } else {
@@ -92,16 +92,14 @@ __ev_poll(struct snmp_event_loop *ev_loop)
     nfds = epoll_wait(env.epfd, env.event, SNMP_MAX_EVENTS, -1);
   }
 
-  if (nfds > 0) {
-    for (i = 0; i < SNMP_MAX_EVENTS; i++) {
-      struct epoll_event *ee = &env.event[i];
-      struct snmp_event *event = &ev_loop->event[i];
-      if (ee->events & EPOLLIN) {
-        event->read = 1;
-      }
-      if (ee->events & EPOLLOUT) {
-        event->write = 1;
-      }
+  for (i = 0; i < nfds; i++) {
+    struct epoll_event *ee = &env.event[i];
+    struct snmp_event *event = &ev_loop->event[i];
+    if (ee->events & EPOLLIN) {
+      event->read = 1;
+    }
+    if (ee->events & EPOLLOUT) {
+      event->write = 1;
     }
   }
 
