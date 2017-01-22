@@ -13,7 +13,7 @@ install:
   - "./tests/netsnmp_build.sh"
 
 script:
-  - "scons --with-agentx --evloop=$EVLOOP --gcov=yes"
+  - "scons --with-agentx --evloop=$EVLOOP"
   - "sudo LUACOV=1 SYS_LUA_PATH=`$LUA -e 'print(package.path)'` LUA=$LUA python ./tests/test_all.py"
   - "sudo chmod 666 luacov.stats.out"
 
