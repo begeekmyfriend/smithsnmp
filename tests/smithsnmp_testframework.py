@@ -16,13 +16,6 @@ lua_exe = "lua5.1"
 if os.environ.has_key('LUA') is True:
 	lua_exe = os.getenv('LUA')
 
-luacov = ""
-if os.environ.has_key('LUACOV') is True:
-	luacov = "-lluacov"
-	
-	# luacov is installed in system, so we need it in *LUA_PATH*
-	env['LUA_PATH'] = ";".join([env['LUA_PATH'], os.environ['SYS_LUA_PATH']])
-
 # ASN.1 tag
 class SNMPASN1Tag:
 	def __init__(self, value):
@@ -219,7 +212,7 @@ class SmithSNMPTestFramework:
 
 	def snmp_setup(self, config_file):
 		print "Starting Smith-SNMP Agent (Master Mode)..."
-		self.snmp = pexpect.spawn(r"%s %s ./bin/smithsnmpd -c %s" % (lua_exe, luacov, config_file), env = env)
+		self.snmp = pexpect.spawn(r"%s %s ./bin/smithsnmpd -c %s" % (lua_exe, config_file), env = env)
 		self.snmp.logfile_read = sys.stderr
 		self.snmp.expect("SmithSNMP .+\r\n")
 
@@ -232,7 +225,7 @@ class SmithSNMPTestFramework:
 		self.netsnmp.expect("NET-SNMP version [\d\.]+\r\n")
 
 		print "Starting SmithSNMP SubAgent (AgentX Mode)..."
-		self.agentx = pexpect.spawn(r"%s %s ./bin/smithsnmpd -c %s" % (lua_exe, luacov, config_file), env = env)
+		self.agentx = pexpect.spawn(r"%s %s ./bin/smithsnmpd -c %s" % (lua_exe, config_file), env = env)
 		self.agentx.logfile_read = sys.stderr
 		self.agentx.expect("SmithSNMP .+\r\n")
 

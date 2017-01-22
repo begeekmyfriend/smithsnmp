@@ -1,7 +1,7 @@
 SmithSNMP -- Yet Another Smart SNMP Agent
 =========================================
 
-[![Build Status](https://travis-ci.org/begeekmyfriend/smithsnmp.svg?branch=master)](https://travis-ci.org/begeekmyfriend/smithsnmp) [![Coverage Status](https://coveralls.io/repos/begeekmyfriend/smithsnmp/badge.svg?branch=master)](https://coveralls.io/r/begeekmyfriend/smithsnmp?branch=master)
+[![Build Status](https://travis-ci.org/begeekmyfriend/smithsnmp.svg?branch=master)](https://travis-ci.org/begeekmyfriend/smithsnmp)
 
 **SmithSNMP** is a fork from [SmartSNMP](https://github.com/credosemi/smartsnmp)
 with more advanced features ahead such as SNMPv3 encryption and SNMPv2 trap. In
@@ -61,7 +61,6 @@ You will get:
                                     ignore LDFLAGS env)
       --with-libs=LIBS            use LIBS as link time arguments to ld
       --with-liblua=DIR           use liblua in DIR
-      --gcov=[yes|no]             compile C source code with gcov support
 
 You can specify options above you need to build the project.
 
