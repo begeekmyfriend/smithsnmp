@@ -22,3 +22,6 @@ cd ${NET_SNMP_ROOT_DIR}/net-snmp-src/net-snmp-${NET_SNMP_VERSION}
 ./configure --with-default-snmp-version="3" --with-sys-contact="contact" --with-sys-location="location" --with-logfile="/var/log/snmpd.log" --with-persistent-directory="/var/net-snmp" --prefix=${NET_SNMP_ROOT_DIR}/net-snmp-release --disable-manuals --disable-scripts --disable-mibs --disable-embedded-perl --disable-deprecated --without-perl-modules --with-out-mib-modules="mibII ucd_snmp agent_mibs notification notification-log-mib target utilities disman/event disman/schedule host" --with-mib_modules="mibII/vacm_vars"
 make
 make install
+
+# clean
+rm -rf ${NET_SNMP_ROOT_DIR}/net-snmp-src

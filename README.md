@@ -33,8 +33,11 @@ Assume **SmithSNMP** is running on Ubuntu, you shall install libraries such as:
     # lua5.1
     sudo apt-get install -y lua5.1 liblua5.1-0-dev
 
-    # scons & git
-    sudo apt-get install -y scons git
+    # scons
+    sudo apt-get install -y scons
+
+    # luarocks
+    sudo apt-get install -y luarocks
 
     # clone with git
     git clone https://github.com/begeekmyfriend/smithsnmp.git
@@ -64,6 +67,10 @@ You will get:
 
 You can specify options above you need to build the project.
 
+For luarocks build, type:
+
+    sudo luarocks build smithsnmp-scm-1.rockspec
+
 Test script
 -----------
 
@@ -80,24 +87,23 @@ NET-SNMP will be tested as a client as well as the master agent, so we will
 download **NET-SNMP-5.7.3** source and build out the images under `tests`
 directory:
 
-    cd smithsnmp
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
     ./tests/netsnmp_build.sh
 
 In **SNMP** mode, we would run SmithSNMP as a daemon:
 
-    cd smithsnmp
-    scons
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
     sudo ./tests/snmp_daemon.sh
 
 Then run test cases at another terminal:
 
-    cd smithsnmp
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
     ./tests/testcases.sh
 
 Especially, if you want to test **SNMP TRAP** feature, run snmptrapd at 162 port:
 
-    cd smithsnmp
-    sudo ./tests/net-snmp-release/sbin/snmptrapd -f -Lo -m "" -C -c tests/snmptrapd.conf
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
+    sudo ./tests/netsnmptrapd.sh
 
 Now open the trap feature at another terminal (SmithSNMP running as a daemon at 161 port):
 
@@ -109,22 +115,18 @@ And you can close the trap feature any time as you like:
 
 In **AgentX** mode, we run NET-SNMP as the master agent first:
 
-    cd smithsnmp
-    sudo ./tests/net-snmp-release/sbin/snmpd -f -Lo -m "" -C -c tests/snmpd.conf
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
+    sudo ./tests/netsnmpd.sh
 
 Then run SmithSNMP as a sub-agent at another terminal:
 
-    cd smithsnmp
-    scons --with-agentx
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
     ./tests/agentx_daemon.sh
 
 Then run test cases at the third terminal:
 
-    cd smithsnmp
+    cd /usr/local/lib/luarocks/rocks/smithsnmp/scm-1
     ./tests/testcases.sh
-
-**Note:** If you want to run `./tests/test_all.py` as unit test suite, remember
-to build SmithSNMP with "--with-agentx" option.
 
 TODO
 ----
