@@ -186,25 +186,27 @@ if users ~= nil then
     end
 end
 
-snmpd.init(protocol, port)
-
-snmpd.open()
-
-for i, v in ipairs(mib_mod_refs) do
-    status, err = register_mib_module(v['oid'], v['name'])
-    if status ~= true then
-        print("Failed to load MIB module: "..v['name'])
-        print(err)
+ret = snmpd.init(protocol, port)
+if ret == true then
+    ret = snmpd.open()
+    if ret == true then 
+        for i, v in ipairs(mib_mod_refs) do
+            status, err = register_mib_module(v['oid'], v['name'])
+            if status ~= true then
+                print("Failed to load MIB module: "..v['name'])
+                print(err)
+            end
+        end
+        
+        mib_modules = nil
+        mib_mod_refs = nil
+        
+        if protocol == 'snmp' then
+        	print("SmithSNMP (Mode: SNMP Agent)")
+        else
+        	print("SmithSNMP (Mode: AgentX Sub-Agent)")
+        end
+        
+        snmpd.start()
     end
 end
-
-mib_modules = nil
-mib_mod_refs = nil
-
-if protocol == 'snmp' then
-	print("SmithSNMP (Mode: SNMP Agent)")
-else
-	print("SmithSNMP (Mode: AgentX Sub-Agent)")
-end
-
-snmpd.start()
