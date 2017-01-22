@@ -212,7 +212,7 @@ class SmithSNMPTestFramework:
 
 	def snmp_setup(self, config_file):
 		print "Starting Smith-SNMP Agent (Master Mode)..."
-		self.snmp = pexpect.spawn(r"%s %s ./bin/smithsnmpd -c %s" % (lua_exe, config_file), env = env)
+		self.snmp = pexpect.spawn(r"%s ./bin/smithsnmpd -c %s" % (lua_exe, config_file), env = env)
 		self.snmp.logfile_read = sys.stderr
 		self.snmp.expect("SmithSNMP .+\r\n")
 
@@ -225,7 +225,7 @@ class SmithSNMPTestFramework:
 		self.netsnmp.expect("NET-SNMP version [\d\.]+\r\n")
 
 		print "Starting SmithSNMP SubAgent (AgentX Mode)..."
-		self.agentx = pexpect.spawn(r"%s %s ./bin/smithsnmpd -c %s" % (lua_exe, config_file), env = env)
+		self.agentx = pexpect.spawn(r"%s ./bin/smithsnmpd -c %s" % (lua_exe, config_file), env = env)
 		self.agentx.logfile_read = sys.stderr
 		self.agentx.expect("SmithSNMP .+\r\n")
 
