@@ -6,16 +6,17 @@ source = {
 }
 description = {
         summary = "A lightweight SNMP agent with private MIB in Lua",
-        detailed = [[
-        SmithSNMP is a fork from [SmartSNMP](https://github.com/credosemi/smartsnmp)
-        with more advanced features ahead such as SNMPv3 encryption and SNMPv2 trap. In
-        the famous science fiction movie Matrix, Agent Smith is a character with powerful
-        strength programmed to keep order within the system.]],
+        detailed = [[SmithSNMP is a lightweight, easy-config agent for network management monitor
+                over SNMPv1/v2/v3 and AgentX protocol with encryption. It is written in C99 and
+                Lua5.1. It can be run on general Linux platforms as well as embedded systems like
+                OpenWRT. The agent is compatible with client utilities as well as SNMPv2 trap daemon
+                of Net-SNMP. The biggest bonus of this agent is that private MIBs in Lua areallowed
+                to be customized and in hot-loading.]],
         homepage = "https://github.com/begeekmyfriend/smithsnmp",
         license = "GPLv2"
 }
 dependencies = {
-        "lua ~> 5.1"
+        "lua == 5.1"
 }
 build = {
         type = "builtin",
