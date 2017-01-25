@@ -1,8 +1,8 @@
 package = "SmithSNMP"
-version = "0.8-1"
+version = "0.8-2"
 source = {
-        url = "https://github.com/begeekmyfriend/smithsnmp/archive/v0.8.tar.gz",
-        dir = "smithsnmp-0.8"
+        url = "https://github.com/begeekmyfriend/smithsnmp/archive/v0.8.1.tar.gz",
+        dir = "smithsnmp-0.8.1"
 }
 description = {
         summary = "A lightweight SNMP agent with private MIB in Lua",
