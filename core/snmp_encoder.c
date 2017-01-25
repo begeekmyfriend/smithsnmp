@@ -116,7 +116,7 @@ ber_uint_enc_try(unsigned int value)
 #else
   i = 0;
 
-  while (i < sizeof(unsigned int) && !a.buf[i]) {
+  while (i < (sizeof(unsigned int) - 1) && !a.buf[i]) {
     i++;
   }
   if (a.buf[i] & 0x80) {
@@ -242,14 +242,14 @@ ber_int_enc(int value, uint8_t *buf)
   i = 0;
 
   if (value >= 0) {
-    while (i < sizeof(int) && !a.buf[i]) {
+    while (i < (sizeof(int) - 1) && !a.buf[i]) {
       i++;
     }
     if (a.buf[i] & 0x80) {
       buf[j++] = 0x0;
     }
   } else {
-    while (i < sizeof(int) && a.buf[i] == 0xff) {
+    while (i < (sizeof(int) - 1) && a.buf[i] == 0xff) {
       i++;
     }
     if (!(a.buf[i] & 0x80)) {
@@ -297,7 +297,7 @@ ber_uint_enc(int value, uint8_t *buf)
 #else
   i = 0;
 
-  while (i < sizeof(unsigned int) && !a.buf[i]) {
+  while (i < (sizeof(unsigned int) - 1) && !a.buf[i]) {
     i++;
   }
   if (a.buf[i] & 0x80) {
@@ -421,7 +421,7 @@ ber_length_enc_try(uint32_t value)
   len += i + 1;
 #else
   i = 0;
-  while (i < sizeof(uint32_t) && !a.buf[i]) {
+  while (i < (sizeof(uint32_t) - 1) && !a.buf[i]) {
     i++;
   }
 
@@ -466,7 +466,7 @@ ber_length_enc(uint32_t value, uint8_t *buf)
   }
 #else
   i = 0;
-  while (i < sizeof(uint32_t) && !a.buf[i]) {
+  while (i < (sizeof(uint32_t) - 1) && !a.buf[i]) {
     i++;
   }
 
