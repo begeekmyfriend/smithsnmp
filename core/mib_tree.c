@@ -43,9 +43,8 @@ oid_t *
 oid_dup(const oid_t *oid, uint32_t len)
 {
   int i;
-  oid_t *new_oid;
   /* We need to allocate largest space so as to hold any oid */
-  new_oid = xmalloc(ASN1_VALUE_MAX_LEN * sizeof(oid_t));
+  oid_t *new_oid = xmalloc(ASN1_VALUE_MAX_LEN * sizeof(oid_t));
   for (i = 0; i < len; i++) {
     new_oid[i] = oid[i];
   }
@@ -56,29 +55,21 @@ int
 oid_cmp(const oid_t *src, uint32_t src_len, const oid_t *target, uint32_t tar_len)
 {
   int ret = 0;
-
   while (src_len && tar_len && !(ret = (int)(*src++ - *target++))) {
     src_len--;
     tar_len--;
     continue;
   }
-
-  if (!ret) {
-    return src_len - tar_len;
-  } else {
-    return ret;
-  }
+  return ret == 0 ? src_len - tar_len : ret;
 }
 
 oid_t *
 oid_cpy(oid_t *oid_dest, const oid_t *oid_src, uint32_t len)
 {
   oid_t *dest = oid_dest;
-
   while (len-- > 0) {
     *dest++ = *oid_src++;
   }
-
   return oid_dest;
 }
 
@@ -341,11 +332,7 @@ nbl_push(const struct node_backlog *nbl, struct node_backlog **top, struct node_
 static inline struct node_backlog *
 nbl_pop(struct node_backlog **top, struct node_backlog **buttom)
 {
-  if (*top > *buttom) {
-    return --*top;
-  } else {
-    return NULL;
-  }
+  return *top > *buttom ? --*top : NULL;
 }
 
 /* GETNEXT request search, depth-first traversal in mib-tree, find the closest next oid. */
@@ -377,13 +364,9 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
     /* Duplicate the given oid */
     oid_cpy(ret_oid->oid, orig_oid, orig_id_len);
     ret_oid->id_len = orig_id_len;
-    if (ret_oid->id_len > ret_oid->inst_id - ret_oid->oid) {
-      /* Given oid is longer than the search result's, we need to search according to the given oid */
-      immediate = 0;
-    } else {
-      /* Otherwise, ignore the given oid */
-      immediate = 1;
-    }
+    /* If given oid is longer than the search result, we need to search
+     * according to the given oid. Otherwise, ignore it. */
+    immediate = ret_oid->id_len > ret_oid->inst_id - ret_oid->oid ? 0 : 1;
   } else {
     /* Out of range of view */
     if (oid_cmp(orig_oid, orig_id_len, view->oid, view->id_len) < 0) {
@@ -393,11 +376,7 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
       assert(node != NULL);
       ret_oid->request = SNMP_REQ_GETNEXT;
       /* Set the search mode according to node type */
-      if (node->type == MIB_OBJ_GROUP) {
-        immediate = 1;
-      } else {
-        immediate = 0;
-      }
+      immediate = node->type == MIB_OBJ_GROUP ? 1 : 0;
     } else {
       /* END_OF_MIB_VIEW */
       node = NULL;
@@ -421,20 +400,14 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
         gn = (struct mib_group_node *)node;
         if (immediate) {
           /* Fetch the immediate instance node. */
-          int i;
-          if (p_nbl != NULL) {
-            /* Fetch the sub-id next to the pop-up backlogged one. */
-            i = p_nbl->n_idx;
-            p_nbl = NULL;
-          } else {
-            /* Fetch the first sub-id. */
-            i = 0;
-          }
+          /* Fetch the sub-id of the backlogged node. */
+          int i = p_nbl != NULL ? p_nbl->n_idx : 0;
+          /* n_idx is not reusable */
+          p_nbl = NULL;
 
           if (i + 1 >= gn->sub_id_cnt) {
-            /* Last sub-id, mark NULL and -1. */
             nbl.node = NULL;
-            nbl.n_idx = -1;
+            nbl.n_idx = 0;
           } else {
             nbl.node = node;
             nbl.n_idx = i + 1;
@@ -470,9 +443,8 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
           /* Sub-id found is greater or just equal to the target,
            * Anyway, record the next node and push it into stack. */
           if (i + 1 >= gn->sub_id_cnt) {
-            /* Last sub-id, mark NULL and -1. */
             nbl.node = NULL;
-            nbl.n_idx = -1;
+            nbl.n_idx = 0;
           } else {
             nbl.node = node;
             nbl.n_idx = i + 1;
@@ -492,13 +464,9 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
 
       case MIB_OBJ_INSTANCE:
         in = (struct mib_instance_node *)node;
-        if (immediate || id_len == 0) {
-          /* Fetch the first instance variable */
-          ret_oid->inst_id_len = 0;
-        } else {
-          /* Search the closest instance whose oid is greater than the target */
-          ret_oid->inst_id_len = id_len;
-        }
+        /* Fetch the first instance variable or 
+         * search the closest instance whose oid is greater than the target */
+        ret_oid->inst_id_len = immediate || id_len == 0 ? 0 : id_len;
         /* Find instance variable through lua handler function */
         ret_oid->inst_id = oid;
         ret_oid->callback = in->callback;
@@ -607,7 +575,6 @@ static void
 group_node_shrink(struct mib_group_node *gn, int index)
 {
   int i;
-
   if (gn->sub_id_cnt > 1) {
     for (i = index; i < gn->sub_id_cnt - 1; i++) {
       gn->sub_id[i] = gn->sub_id[i + 1];
@@ -704,10 +671,7 @@ mib_tree_node_search(const oid_t *oid, uint32_t id_len, struct node_pair *pair)
       pair->parent = parent;
       pair->child = node;
       pair->sub_idx = sub_idx;
-      if (id_len != 1) {
-        return NULL;
-      }
-      return node;
+      return id_len == 1 ? node : NULL;
 
     default:
       assert(0);
@@ -751,15 +715,10 @@ __mib_tree_delete(struct node_pair *pair)
     case MIB_OBJ_GROUP:
       gn = (struct mib_group_node *)node;
 
-      int i;
-      if (p_nbl != NULL) {
-        /* Fetch the sub-id next to the pop-up backlogged one. */
-        i = p_nbl->n_idx;
-        p_nbl = NULL;
-      } else {
-        /* Fetch the first sub-id. */
-        i = 0;
-      }
+      /* Fetch the sub-id of the backlogged node. */
+      int i = p_nbl != NULL ? p_nbl->n_idx : 0;
+      /* n_idx is not reusable */
+      p_nbl = NULL;
 
       if (i == -1) {
         /* Sub-tree is empty, delete this node and go on backtracking */
@@ -767,12 +726,8 @@ __mib_tree_delete(struct node_pair *pair)
         break;
       }
 
-      if (i + 1 >= gn->sub_id_cnt) {
-        /* Last sub-id, mark n_idx = -1. */
-        nbl.n_idx = -1;
-      } else {
-        nbl.n_idx = i + 1;
-      }
+      /* If last sub-id, mark n_idx = -1. */
+      nbl.n_idx = i + 1 >= gn->sub_id_cnt ? -1 : i + 1;
       nbl.node = node;
 
       /* Backlog the current node and move down. */
