@@ -321,29 +321,15 @@ struct node_backlog {
   int n_idx;
 };
 
-static inline void
-nbl_push(const struct node_backlog *nbl, struct node_backlog **top, struct node_backlog **buttom)
-{
-  if (*top - *buttom < ASN1_OID_MAX_LEN) {
-    *((*top)++) = *nbl;
-  }
-}
-
-static inline struct node_backlog *
-nbl_pop(struct node_backlog **top, struct node_backlog **buttom)
-{
-  return *top > *buttom ? --*top : NULL;
-}
-
 /* GETNEXT request search, depth-first traversal in mib-tree, find the closest next oid. */
 void
 mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig_id_len, struct oid_search_res *ret_oid)
 {
   oid_t *oid;
   uint32_t id_len;
-  struct node_backlog nbl, *p_nbl;
-  struct node_backlog nbl_stk[ASN1_OID_MAX_LEN];
-  struct node_backlog *stk_top, *stk_buttom;
+  struct node_backlog *p_nbl;
+  struct node_backlog nbl_stack[ASN1_OID_MAX_LEN];
+  struct node_backlog *top;
   struct mib_node *node;
   struct mib_group_node *gn;
   struct mib_instance_node *in;
@@ -387,7 +373,7 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
 
   /* Init something */
   p_nbl = NULL;
-  stk_top = stk_buttom = nbl_stk;
+  top = nbl_stack;
   ret_oid->err_stat = 0;
   oid = ret_oid->inst_id;
   id_len = ret_oid->id_len - (oid - ret_oid->oid);
@@ -405,15 +391,15 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
           /* n_idx is not reusable */
           p_nbl = NULL;
 
-          if (i + 1 >= gn->sub_id_cnt) {
-            nbl.node = NULL;
-            nbl.n_idx = 0;
-          } else {
-            nbl.node = node;
-            nbl.n_idx = i + 1;
-          }
           /* Backlog the current node and move on. */
-          nbl_push(&nbl, &stk_top, &stk_buttom);
+          if (i + 1 >= gn->sub_id_cnt) {
+            top->node = NULL;
+            top->n_idx = 0;
+          } else {
+            top->node = node;
+            top->n_idx = i + 1;
+          }
+          top++;
           *oid++ = gn->sub_id[i];
           node = gn->sub_ptr[i];
         } else {
@@ -443,15 +429,14 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
           /* Sub-id found is greater or just equal to the target,
            * Anyway, record the next node and push it into stack. */
           if (i + 1 >= gn->sub_id_cnt) {
-            nbl.node = NULL;
-            nbl.n_idx = 0;
+            top->node = NULL;
+            top->n_idx = 0;
           } else {
-            nbl.node = node;
-            nbl.n_idx = i + 1;
+            top->node = node;
+            top->n_idx = i + 1;
           }
+          top++;
 
-          /* Backlog the current node and move on. */
-          nbl_push(&nbl, &stk_top, &stk_buttom);
           *oid++ = gn->sub_id[i];
           node = gn->sub_ptr[i];
           if (--id_len == 0 && node->type == MIB_OBJ_GROUP) {
@@ -494,7 +479,7 @@ mib_tree_search_next(struct mib_view *view, const oid_t *orig_oid, uint32_t orig
      * 2. Seek the immediate closest instance node;
      * 3. Node not exists(node == NULL).
      */
-    p_nbl = nbl_pop(&stk_top, &stk_buttom);
+    p_nbl = top == nbl_stack ? NULL : --top;
     if (p_nbl == NULL) {
       /* End of traversal. */
       oid_cpy(ret_oid->oid, orig_oid, orig_id_len);
@@ -691,9 +676,9 @@ mib_tree_node_search(const oid_t *oid, uint32_t id_len, struct node_pair *pair)
 static void
 __mib_tree_delete(struct node_pair *pair)
 {
-  struct node_backlog nbl, *p_nbl;
-  struct node_backlog nbl_stk[ASN1_OID_MAX_LEN];
-  struct node_backlog *stk_top, *stk_buttom;
+  struct node_backlog *p_nbl;
+  struct node_backlog nbl_stack[ASN1_OID_MAX_LEN];
+  struct node_backlog *top;
 
   struct mib_node *node = pair->child;
   struct mib_group_node *gn;
@@ -706,7 +691,7 @@ __mib_tree_delete(struct node_pair *pair)
 
   /* Init something */
   p_nbl = NULL;
-  stk_top = stk_buttom = nbl_stk;
+  top = nbl_stack;
 
   for (; ;) {
 
@@ -727,11 +712,10 @@ __mib_tree_delete(struct node_pair *pair)
       }
 
       /* If last sub-id, mark n_idx = -1. */
-      nbl.n_idx = i + 1 >= gn->sub_id_cnt ? -1 : i + 1;
-      nbl.node = node;
+      top->n_idx = i + 1 >= gn->sub_id_cnt ? -1 : i + 1;
+      top->node = node;
+      top++;
 
-      /* Backlog the current node and move down. */
-      nbl_push(&nbl, &stk_top, &stk_buttom);
       node = gn->sub_ptr[i++];
       continue;
 
@@ -745,7 +729,7 @@ __mib_tree_delete(struct node_pair *pair)
     }
 
     /* Backtracking */
-    p_nbl = nbl_pop(&stk_top, &stk_buttom);
+    p_nbl = top == nbl_stack ? NULL : --top;
     if (p_nbl == NULL) {
       /* End of traversal. */
       group_node_shrink((struct mib_group_node *)pair->parent, pair->sub_idx);
