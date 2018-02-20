@@ -70,7 +70,7 @@ snmp_event_init(void)
     event->write = 0;
   }
   ev_loop.running = 1;
-  ev_loop.timeout = 0;
+  ev_loop.timeout = -1;
   ev_loop.max_fd = -1;
   __ev_init();
 }
@@ -89,7 +89,7 @@ snmp_event_done(void)
     event->write = 0;
   }
   ev_loop.running = 0;
-  ev_loop.timeout = 0;
+  ev_loop.timeout = -1;
   ev_loop.max_fd = -1;
 }
 
@@ -199,4 +199,19 @@ snmp_event_run(void)
 #endif
     }
   }
+}
+
+int
+snmp_event_step(long timeout)
+{
+  int ret = 0;
+  ev_loop.timeout = timeout;
+  ret = snmp_event_poll();
+  if (ret == 0) {
+#ifndef DISABLE_TRAP
+    /* Trap probing happens only when polling timeout */
+    smithsnmp_trap_ops->probe();
+#endif
+  }
+  return ret;
 }

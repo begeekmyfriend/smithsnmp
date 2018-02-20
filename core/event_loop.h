@@ -34,5 +34,6 @@ void snmp_event_run(void);
 int snmp_event_add(int fd, unsigned char flag, transport_handler cb, void *ud);
 void snmp_event_remove(int fd, unsigned char flag);
 void snmp_event_timeout(long timeout);
+int  snmp_event_step(long timeout);
 
 #endif /* _SNMP_EVENT_LOOP_H_ */

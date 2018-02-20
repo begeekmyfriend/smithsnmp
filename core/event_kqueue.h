@@ -75,7 +75,7 @@ __ev_poll(struct snmp_event_loop *ev_loop)
 {
   int i, nfds;
 
-  if (ev_loop->timeout) {
+  if (ev_loop->timeout != -1) {
     struct timespec tv;
     tv.tv_sec = ev_loop->timeout / 1000;
     tv.tv_nsec = ev_loop->timeout % 1000 * 1000 * 1000;

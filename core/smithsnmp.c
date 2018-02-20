@@ -94,6 +94,14 @@ smithsnmp_run(lua_State *L)
 }
 
 int
+smithsnmp_step(lua_State *L)
+{
+  long timeout = luaL_optinteger(L, 1, 0);
+  smithsnmp_prot_ops->step(timeout);
+  return 0;  
+}
+
+int
 smithsnmp_exit(lua_State *L)
 {
   smithsnmp_prot_ops->close();
@@ -424,6 +432,7 @@ static const luaL_Reg smithsnmp_func[] = {
   { "init", smithsnmp_init },
   { "open", smithsnmp_open },
   { "run", smithsnmp_run },
+  { "step", smithsnmp_step },
   { "exit", smithsnmp_exit },
   { "mib_node_reg", smithsnmp_mib_node_reg },
   { "mib_node_unreg", smithsnmp_mib_node_unreg },

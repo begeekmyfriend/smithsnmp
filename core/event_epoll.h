@@ -86,7 +86,7 @@ __ev_poll(struct snmp_event_loop *ev_loop)
 {
   int i, nfds;
 
-  if (ev_loop->timeout) {
+  if (ev_loop->timeout != -1) {
     nfds = epoll_wait(env.epfd, env.event, SNMP_MAX_EVENTS, ev_loop->timeout);
   } else {
     nfds = epoll_wait(env.epfd, env.event, SNMP_MAX_EVENTS, -1);
