@@ -32,6 +32,7 @@ struct transport_operation {
   void (*running)(void);
   void (*close)(void);
   void (*send)(uint8_t *buf, int len);
+  int (*step)(long timeout);
 };
 
 extern struct transport_operation snmp_transp_ops;

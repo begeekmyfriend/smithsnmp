@@ -38,6 +38,7 @@ struct protocol_operation {
   int (*unreg)(const oid_t *grp_id, int id_len);
   void (*receive)(uint8_t *buf, int len);
   void (*send)(uint8_t *buf, int len);
+  int  (*step)(long timeout);
 };
 
 extern struct protocol_operation snmp_prot_ops;

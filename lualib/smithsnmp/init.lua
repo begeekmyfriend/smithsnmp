@@ -816,6 +816,11 @@ _M.start = function ()
     core.run()
 end
 
+-- start snmp agent
+_M.step = function (tm)
+    core.step(tm)
+end
+
 -- set read only community
 _M.set_ro_community = function (community, oid)
     assert(type(community) == 'string')

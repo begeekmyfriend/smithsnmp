@@ -109,6 +109,19 @@ transport_running(void)
   snmp_event_run();
 }
 
+static int
+transport_step(long timeout)
+{
+  static int inited = 0;
+  if (inited == 0) {
+    snmp_event_init();
+    snmp_event_add(snmp_entry.sock, SNMP_EV_READ, snmp_read_handler, NULL);
+    snmp_event_add(snmp_entry.sigfd, SNMP_EV_READ, snmp_signal_handler, NULL);
+    inited = 1;
+  }
+  return snmp_event_step(timeout);
+}
+
 static void
 transport_close(void)
 {
@@ -166,4 +179,5 @@ struct transport_operation snmp_transp_ops = {
   transport_running,
   transport_close,
   transport_send,
+  transport_step,
 };

@@ -73,10 +73,10 @@ __ev_poll(struct snmp_event_loop *ev_loop)
   memcpy(&env.rfds_, &env.rfds, sizeof(fd_set));
   memcpy(&env.wfds_, &env.wfds, sizeof(fd_set));
 
-  if (ev_loop->timeout) {
+  if (ev_loop->timeout != -1) {
     struct timeval tv;
     tv.tv_sec = ev_loop->timeout / 1000;
-    tv.tv_usec = ev_loop->timeout % 1000 * 1000;
+    tv.tv_usec = (ev_loop->timeout % 1000) * 1000;
     nfds = select(ev_loop->max_fd + 1, &env.rfds_, &env.wfds_, NULL, &tv);
   } else {
     nfds = select(ev_loop->max_fd + 1, &env.rfds_, &env.wfds_, NULL, NULL);

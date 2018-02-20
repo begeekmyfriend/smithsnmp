@@ -94,6 +94,12 @@ snmpd_run(void)
   return snmp_transp_ops.running();
 }
 
+static int
+snmpd_step(long timeout)
+{
+  return snmp_transp_ops.step(timeout);
+}
+
 struct protocol_operation snmp_prot_ops = {
   "snmp",
   snmpd_init,
@@ -104,4 +110,5 @@ struct protocol_operation snmp_prot_ops = {
   snmpd_mib_node_unreg,
   snmpd_receive,
   snmpd_send,
+  snmpd_step,
 };
