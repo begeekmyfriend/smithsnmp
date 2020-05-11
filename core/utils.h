@@ -30,28 +30,32 @@
 #define uint_sizeof(n) ((n + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1))
 #define elem_num(arr) (sizeof(arr) / sizeof(arr[0]))
 
-#define HTON16(x) NTOH16(x)
-#define HTON32(x) NTOH32(x)
 
-#define NTOH16(x) ((uint16_t)( \
-  (((uint16_t)(x) & 0x00ff) << 8) | \
-  (((uint16_t)(x) & 0xff00) >> 8)))
+#include "byteswap.h"
 
-#define NTOH32(x) ((uint32_t)( \
-  (((uint32_t)(x) & 0x000000ffU) << 24) | \
-  (((uint32_t)(x) & 0x0000ff00U) << 8) | \
-  (((uint32_t)(x) & 0x00ff0000U) >> 8) | \
-  (((uint32_t)(x) & 0xff000000U) >> 24)))
+/* Compared to a normal htons()/htonl()/ntohs()/ntohl() we not only need to
+ * take our own endianess into account, but also the endianess of the other
+ * side. If our and the other participant's endianess differ then we need to
+ * swap bytes.
+ */
+#if defined LITTLE_ENDIAN
 
-#define NTOH64(x) ((uint64_t)( \
-  (((uint64_t)(x) & 0x00000000000000ffU) << 56) | \
-  (((uint64_t)(x) & 0x000000000000ff00U) << 40) | \
-  (((uint64_t)(x) & 0x0000000000ff0000U) << 24) | \
-  (((uint64_t)(x) & 0x00000000ff000000U) << 8) | \
-  (((uint64_t)(x) & 0x000000ff00000000U) >> 8) | \
-  (((uint64_t)(x) & 0x0000ff0000000000U) >> 24) | \
-  (((uint64_t)(x) & 0x00ff000000000000U) >> 40) | \
-  (((uint64_t)(x) & 0xff00000000000000U) >> 56)))
+#define htoax16(x, flags) ((flags & NETWORD_BYTE_ORDER) ? bswap_16(x) : (x))
+#define htoax32(x, flags) ((flags & NETWORD_BYTE_ORDER) ? bswap_32(x) : (x))
+#define htoax64(x, flags) ((flags & NETWORD_BYTE_ORDER) ? bswap_64(x) : (x))
+
+#else
+
+#define htoax16(x, flags) ((flags & NETWORD_BYTE_ORDER) ? (x) : bswap_16(x))
+#define htoax32(x, flags) ((flags & NETWORD_BYTE_ORDER) ? (x) : bswap_32(x))
+#define htoax64(x, flags) ((flags & NETWORD_BYTE_ORDER) ? (x) : bswap_64(x))
+
+#endif
+
+#define axtoh16(x, flags) htoax16(x, flags)
+#define axtoh32(x, flags) htoax32(x, flags)
+#define axtoh64(x, flags) htoax64(x, flags)
+
 
 //#define LOGOFF
 
