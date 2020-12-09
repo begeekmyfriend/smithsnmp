@@ -157,13 +157,8 @@ transport_init(int port)
 
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
-#ifdef LITTLE_ENDIAN
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
   sin.sin_port = htons(port);
-#else
-  sin.sin_addr.s_addr = INADDR_ANY;
-  sin.sin_port = port;
-#endif
 
   if (connect(agentx_entry.sock, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
     perror("connect()");
