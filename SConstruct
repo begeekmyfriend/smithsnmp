@@ -161,9 +161,9 @@ if os.environ.has_key('CC'):
 
 # CCFLAGS
 if GetOption("cflags") != "":
-  env.Append(CCFLAGS = GetOption("cflags"))
+  env.MergeFlags(CCFLAGS = GetOption("cflags"))
 elif os.environ.has_key('CCFLAGS'):
-  env.Append(CCFLAGS = os.environ['CCFLAGS'])
+  env.MergeFlags(CCFLAGS = os.environ['CCFLAGS'])
 
 # LDFLAGS
 if GetOption("ldflags") != "":
