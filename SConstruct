@@ -198,10 +198,11 @@ else:
 conf = Configure(env, custom_tests = {'CheckEpoll' : CheckEpoll, 'CheckSelect' : CheckSelect, 'CheckKqueue' : CheckKqueue})
 
 # endian check
-if sys.byteorder == "little":
-  env.Append(CPPDEFINES = ["LITTLE_ENDIAN"])
-else:
-  env.Append(CPPDEFINES = ["BIG_ENDIAN"])
+if not 'BIG_ENDIAN' in env['CPPDEFINES'] and not 'LITTLE_ENDIAN' in env['CPPDEFINES']:
+  if sys.byteorder == "little":
+    env.Append(CPPDEFINES = ["LITTLE_ENDIAN"])
+  else:
+    env.Append(CPPDEFINES = ["BIG_ENDIAN"])
 
 # event loop check
 if GetOption("evloop") == 'epoll':
