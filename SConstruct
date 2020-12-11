@@ -23,7 +23,6 @@ sys.path.append(os.path.join(os.getcwd(), "scons_tools"))
 
 from SCons.SConf import SConfError
 from select_probe import *
-from endian_probe import *
 from kqueue_probe import *
 from epoll_probe import *
 
@@ -162,9 +161,11 @@ if os.environ.has_key('CC'):
 
 # CCFLAGS
 if GetOption("cflags") != "":
-  env.Append(CCFLAGS = GetOption("cflags"))
+  env.MergeFlags(CCFLAGS = GetOption("cflags"))
 elif os.environ.has_key('CCFLAGS'):
-  env.Append(CCFLAGS = os.environ['CCFLAGS'])
+  env.MergeFlags(CCFLAGS = os.environ['CCFLAGS'])
+elif os.environ.has_key('CFLAGS'):
+  env.MergeFlags(os.environ['CFLAGS'])
 
 # LDFLAGS
 if GetOption("ldflags") != "":
@@ -194,16 +195,14 @@ else:
   Exit(1)
 
 # autoconf
-conf = Configure(env, custom_tests = {'CheckEpoll' : CheckEpoll, 'CheckSelect' : CheckSelect, 'CheckKqueue' : CheckKqueue, 'CheckEndian' : CheckEndian})
+conf = Configure(env, custom_tests = {'CheckEpoll' : CheckEpoll, 'CheckSelect' : CheckSelect, 'CheckKqueue' : CheckKqueue})
 
 # endian check
-endian = conf.CheckEndian()
-if endian == 'Big':
-  env.Append(CPPDEFINES = ["BIG_ENDIAN"])
-elif endian == 'Little':
-  env.Append(CPPDEFINES = ["LITTLE_ENDIAN"])
-else:
-  raise SConfError("Error when testing the endian.")
+if not 'BIG_ENDIAN' in env['CPPDEFINES'] and not 'LITTLE_ENDIAN' in env['CPPDEFINES']:
+  if sys.byteorder == "little":
+    env.Append(CPPDEFINES = ["LITTLE_ENDIAN"])
+  else:
+    env.Append(CPPDEFINES = ["BIG_ENDIAN"])
 
 # event loop check
 if GetOption("evloop") == 'epoll':

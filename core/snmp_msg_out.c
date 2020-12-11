@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <arpa/inet.h>
+
 #include "mib.h"
 #include "snmp.h"
 #include "protocol.h"
@@ -297,17 +299,10 @@ snmp_msg_encrypt(struct snmp_datagram *sdg)
   uint32_t clen = plen;
   struct mib_user *user = sdg->user;
 
-#ifdef LITTLE_ENDIAN
-  i1 = HTON32(random());
-  i2 = HTON32(random());
-  boots = HTON32(sdg->engine_boots);
-  time = HTON32(sdg->engine_time);
-#else
-  i1 = random();
-  i2 = random();
-  boots = sdg->engine_boots;
-  time = sdg->engine_time;
-#endif
+  i1 = htonl(random());
+  i2 = htonl(random());
+  boots = htonl(sdg->engine_boots);
+  time = htonl(sdg->engine_time);
 
   if (user->priv_mode == SNMP_USER_ENCRYPT_AES) {
     iv_len = sizeof(iv);

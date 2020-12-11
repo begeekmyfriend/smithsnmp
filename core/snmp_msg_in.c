@@ -24,6 +24,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include <arpa/inet.h>
+
 #include "mib.h"
 #include "snmp.h"
 
@@ -421,13 +423,9 @@ snmp_msg_decrypt(struct snmp_datagram *sdg, uint8_t *cipher, uint32_t clen, uint
   uint8_t *salt = sdg->priv_para;
   struct mib_user *user = sdg->user;
 
-#ifdef LITTLE_ENDIAN
-    boots = NTOH32(sdg->engine_boots);
-    time = NTOH32(sdg->engine_time);
-#else
-    boots = sdg->engine_boots;
-    time = sdg->engine_time;
-#endif
+  boots = ntohl(sdg->engine_boots);
+  time = ntohl(sdg->engine_time);
+
   /* Initialize vector */
   if (user->priv_mode == SNMP_USER_ENCRYPT_AES) {
     iv_len = sizeof(iv);
