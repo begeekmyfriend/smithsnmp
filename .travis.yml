@@ -6,7 +6,7 @@ env:
     - "LUA=lua5.1 EVLOOP=select"
 
 install:
-  - "sudo apt-get install -yq $LUA $lib$LUA-0-dev python-pexpect"
+  - "sudo apt-get install -yq $LUA $lib$LUA-0-dev python-pexpect scons"
   - "./tests/netsnmp_build.sh"
 
 script:
