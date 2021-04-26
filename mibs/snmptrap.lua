@@ -56,7 +56,7 @@ local trapGroup = {
 local trap_generic_reg = function (oid)
     assert(type(oid) == 'string')
     trap_generic_oid = {}
-    for i in string.gmatch(oid, "%d") do
+    for i in string.gmatch(oid, "%d+") do
         table.insert(trap_generic_oid, tonumber(i))
     end
     -- Register snmpTrapOID as a default SNMP trap varbind.
@@ -75,7 +75,7 @@ end
 local trap_specific_reg = function (oid)
     assert(type(oid) == 'string')
     trap_specific_oid = {}
-    for i in string.gmatch(oid, "%d") do
+    for i in string.gmatch(oid, "%d+") do
         table.insert(trap_specific_oid, tonumber(i))
     end
     -- Register snmpTrapEnterprise as a default SNMP trap varbind.
