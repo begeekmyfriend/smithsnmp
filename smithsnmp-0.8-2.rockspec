@@ -31,6 +31,7 @@ build = {
                                 "m",
                                 "dl",
                                 "lua5.1",
+                                "lua-5.1",
                         },
                         sources = {
                                 "3rd/crypto/openssl_aes.c",
